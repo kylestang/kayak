@@ -68,33 +68,33 @@ func (group FacebookGroup) login(ctx context.Context) error {
 
 	if title == "Log into Facebook | Facebook" {
 		println("Handling login")
-		err = group.handle_login(ctx)
+		err = handle_login(ctx)
 		if err != nil {
 			return err
 		}
-	}
 
-	err = chromedp.Run(ctx, chromedp.Title(&title))
-	if err != nil {
-		return err
+		err = chromedp.Run(ctx, chromedp.Title(&title))
+		if err != nil {
+			return err
+		}
 	}
 
 	if title == "Enter login code to continue" {
 		println("Handling 2fa")
-		err = group.handle_2fa(ctx)
+		err = handle_2fa(ctx)
+		if err != nil {
+			return err
+		}
+
+		err = chromedp.Run(ctx, chromedp.Title(&title))
 		if err != nil {
 			return err
 		}
 	}
 
-	err = chromedp.Run(ctx, chromedp.Title(&title))
-	if err != nil {
-		return err
-	}
-
 	if title == "Remember browser" {
 		println("Handling remember browser")
-		err = group.handleRemember(ctx)
+		err = handleRemember(ctx)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func (group FacebookGroup) login(ctx context.Context) error {
 	return savePage(ctx, "done_login.html")
 }
 
-func (group FacebookGroup) handle_login(ctx context.Context) error {
+func handle_login(ctx context.Context) error {
 	user := os.Getenv("KAYAK_FB_USER")
 	pass := os.Getenv("KAYAK_FB_PASS")
 	if user == "" || pass == "" {
@@ -129,7 +129,7 @@ func (group FacebookGroup) handle_login(ctx context.Context) error {
 	return savePage(ctx, "login.html")
 }
 
-func (group FacebookGroup) handle_2fa(ctx context.Context) error {
+func handle_2fa(ctx context.Context) error {
 	var auth_code string
 	print("Enter 2FA code: ")
 	fmt.Scanln(&auth_code)
@@ -146,7 +146,7 @@ func (group FacebookGroup) handle_2fa(ctx context.Context) error {
 	return savePage(ctx, "2fa.html")
 }
 
-func (group FacebookGroup) handleRemember(ctx context.Context) error {
+func handleRemember(ctx context.Context) error {
 	err := chromedp.Run(ctx,
 		chromedp.WaitVisible("#checkpointSubmitButton-actual-button", chromedp.ByID),
 		chromedp.Click("#checkpointSubmitButton-actual-button", chromedp.ByID))
@@ -178,5 +178,5 @@ func savePage(ctx context.Context, filename string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(filename, []byte(html), 0644)
+	return ioutil.WriteFile("debug/"+filename, []byte(html), 0644)
 }
